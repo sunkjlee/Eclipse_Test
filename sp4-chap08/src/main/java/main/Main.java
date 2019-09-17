@@ -16,6 +16,7 @@ import spring.MemberNotFoundException;
 import spring.MemberRegisterService;
 import spring.RegisterRequest;
 
+// branch test master add1 
 public class Main {
 
 	private static ApplicationContext ctx = null;
