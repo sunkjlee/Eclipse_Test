@@ -1,0 +1,514 @@
+package com.gnew.bat.util;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Locale;
+
+public class Util {
+	private static final SimpleDateFormat dateHMSFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	
+	private static final SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyyMMdd");
+	
+	private static final SimpleDateFormat dateFileHMSFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+	public static boolean isNull(Object o) {
+		return o == null;
+	}
+
+	public static boolean isNotNull(Object o) {
+		return o != null;
+	}
+
+	public static Date toDate(String formatTime) {
+		DateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		try {
+			Date date = dateformat.parse(formatTime);
+			return date;
+		} catch (Exception localException) {
+		}
+		return null;
+	}
+
+	public static Date toDate2(String formatTime) {
+		DateFormat dateformat = new SimpleDateFormat("yyyyMMdd");
+		try {
+			Date date = dateformat.parse(formatTime);
+			return date;
+		} catch (Exception localException) {
+		}
+		return null;
+	}
+	
+	public static String getCurrentDate() {
+		String currentDate = "";
+		long now = System.currentTimeMillis();
+		try {
+			currentDate = dateFormat.format(new Date(now));
+			return currentDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+	
+	public static String getCurrentDate2() {
+		String currentDate = "";
+		long now = System.currentTimeMillis();
+		try {
+			currentDate = dateFormat2.format(new Date(now));
+			return currentDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+
+
+	public static String getDate(Date curDate) {
+		String currentDate = "";
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd"); 
+			currentDate = dateFormat.format(curDate);
+			return currentDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+	
+	public static String getNextDate(String curDate) {
+		try {
+			SimpleDateFormat  formatter = new SimpleDateFormat("yyyyMMdd");    
+			Date today = formatter.parse(curDate);
+			
+			String date =  formatter.format(today);
+			Date setDate = formatter.parse(date);
+			Calendar cal = new GregorianCalendar(Locale.KOREA);
+
+			cal.setTime(setDate);
+			cal.add(Calendar.DATE, +1);
+
+			String nextDate = formatter.format(cal.getTime());
+			return nextDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+
+	
+	public static String getPreviousDate() {
+		try {
+			SimpleDateFormat  formatter = new SimpleDateFormat("yyyyMMdd");    
+			Date today = new Date();
+
+			String date =  formatter.format(today);
+			Date setDate = formatter.parse(date);
+			Calendar cal = new GregorianCalendar(Locale.KOREA);
+
+			cal.setTime(setDate);
+			cal.add(Calendar.DATE, -1);
+
+			String previousDate = formatter.format(cal.getTime());
+			return previousDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+	
+	public static String getPreviousDate(int amount) {
+		try {
+			SimpleDateFormat  formatter = new SimpleDateFormat("yyyyMMdd");    
+			Date today = new Date();
+
+			String date =  formatter.format(today);
+			Date setDate = formatter.parse(date);
+			Calendar cal = new GregorianCalendar(Locale.KOREA);
+
+			cal.setTime(setDate);
+			cal.add(Calendar.DATE, amount * -1);
+
+			String previousDate = formatter.format(cal.getTime());
+			return previousDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+	
+	public static String getPreviousDate(String StartDate, int amount) {
+		try {
+			SimpleDateFormat  formatter = new SimpleDateFormat("yyyyMMdd");    
+						
+			Date setDate = formatter.parse(StartDate);
+			Calendar cal = new GregorianCalendar(Locale.KOREA);
+
+			cal.setTime(setDate);
+			cal.add(Calendar.DATE, amount * -1);
+
+			String previousDate = formatter.format(cal.getTime());
+			return previousDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+
+	public static String getCurrentDateHMS() {
+		String currentDate = "";
+		long now = System.currentTimeMillis();
+		try {
+			currentDate = dateHMSFormat.format(new Date(now));
+			return currentDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+
+	public static String getDateFormat(long now) {
+		String currentDate = "";
+		try {
+			currentDate = dateFormat.format(new Date(now));
+			return currentDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return "";
+	}
+
+//public static String getLastModifyFileTime() { 
+//	File f = new File(Conf.policyTimeFilePath);
+//Date modifyTime = new Date(f.lastModified());
+//return dateFileHMSFormat.format(modifyTime);
+//}
+
+	public static boolean isNullOrEmpty(String tmp) {
+		return (tmp == null) || ((tmp != null) && (tmp.length() == 0));
+	}
+
+	public static String NullToEmpty(String str) {
+		if (str == null) {
+			return "";
+		}
+		return str;
+	}
+
+	public static String String2DMLEvent(String event) {
+		if (isNullOrEmpty(event)) {
+			return "UNKNOWN";
+		}
+		String str = event.toLowerCase();
+		if (str.startsWith("i"))
+			return "INSERT";
+		if (str.startsWith("u"))
+			return "UPDATE";
+		if (str.startsWith("d"))
+			return "DELETE";
+		if (str.startsWith("s"))
+			return "SELECT";
+
+		return "UNKNOWN";
+	}
+
+	public static boolean timeInBetween(String startDate, String endDate) {
+		return true;
+	}
+
+	public static String bin2display(byte[] buffer, int len) {
+		StringBuffer sb = new StringBuffer();
+		int ptr1 = 0;
+		int ptr2 = 0;
+
+		int nLen = len;
+
+		int i, j = 0;
+
+		sb.append("================== BINARY HEX ================= ==== ASCII =====\n");
+		for (i = 0; i < nLen; i++) {
+			sb.append(byteToHex(buffer[i]) + " ");
+
+			if (((i + 1) % 16 == 0) && (i > 0)) {
+				for (j = 0; j < 16; j++) {
+					if (isPrintableAscii((char) buffer[(ptr2 + j)]))
+						sb.append((char) buffer[(ptr2 + j)]);
+					else
+						sb.append('.');
+				}
+				sb.append("\n");
+				ptr2 = ptr1 + i + 1;
+			}
+		}
+
+		if ((i + 1) % 16 < 15) {
+			for (j = (i + 1) % 16 - 1; j < 16; j++) {
+				sb.append(" ");
+			}
+
+			for (j = 0; j < (i + 1) % 16 - 1; j++) {
+				if (isPrintableAscii((char) buffer[(ptr2 + j)]))
+					sb.append((char) buffer[(ptr2 + j)]);
+				else
+					sb.append('.');
+			}
+			sb.append("\n");
+		}
+		sb.append("----------------------------------------------- ----------------\n");
+
+		return sb.toString();
+	}
+
+	public static String bin2string(byte[] buffer) {
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < buffer.length; i++) {
+			if (isPrintableAscii((char) buffer[i]))
+				sb.append((char) buffer[i]);
+			else {
+				sb.append('.');
+			}
+		}
+		return sb.toString();
+	}
+
+	private static boolean isPrintableAscii(char c) {
+		return !Character.isISOControl(c);
+	}
+
+	public static String byte2HexaString(byte[] bHex) {
+		if (bHex == null)
+			return new String("");
+		byte[] data = new byte[bHex.length * 2];
+		int pos = -1;
+
+		for (int i = 0; i < bHex.length; i++) {
+			pos++;
+			data[pos] = (byte) (bHex[i] >>> 4 & 0xF);
+			if (data[pos] >= 10) {
+				int tmp53_52 = pos;
+				byte[] tmp53_51 = data;
+				tmp53_51[tmp53_52] = (byte) (tmp53_51[tmp53_52] + 55);
+			} else {
+				int tmp65_64 = pos;
+				byte[] tmp65_63 = data;
+				tmp65_63[tmp65_64] = (byte) (tmp65_63[tmp65_64] + 48);
+			}
+			pos++;
+			data[pos] = (byte) (bHex[i] & 0xF);
+			if (data[pos] >= 10) {
+				int tmp95_94 = pos;
+				byte[] tmp95_93 = data;
+				tmp95_93[tmp95_94] = (byte) (tmp95_93[tmp95_94] + 55);
+			} else {
+				int tmp107_106 = pos;
+				byte[] tmp107_105 = data;
+				tmp107_105[tmp107_106] = (byte) (tmp107_105[tmp107_106] + 48);
+			}
+		}
+		return new String(data);
+	}
+
+	public static String byteToHex(byte b) {
+		char[] hexDigit = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+		char[] array = { hexDigit[(b >> 4 & 0xF)], hexDigit[(b & 0xF)] };
+		return new String(array);
+	}
+
+	public static String charToHex(char c) {
+		byte hi = (byte) (c >>> '\b');
+		byte lo = (byte) (c & 0xFF);
+		return byteToHex(hi) + byteToHex(lo);
+	}
+
+	public static String Host2Address(String host) {
+		String addr = "";
+		try {
+			addr = InetAddress.getByName(host).getHostAddress();
+			return addr;
+		} catch (Exception ex) {
+		}
+		return null;
+	}
+
+	public static int parseInt(String s) {
+		if (s == null) {
+			return 0;
+		}
+
+		return s.equalsIgnoreCase("") ? 0 : Integer.parseInt(s);
+	}
+
+	public static int countDigit(String s) {
+		int count = 0;
+		int length = s.length();
+
+		for (int i = 0; i < length; i++) {
+			if (Character.isDigit(s.charAt(i))) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public static int countSpecial(String s) {
+		int count = 0;
+		int length = s.length();
+
+		for (int i = 0; i < length; i++) {
+			if (!Character.isLetterOrDigit(s.charAt(i))) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public static boolean isNullString(String s) {
+		if (s == null) {
+			return true;
+		}
+
+		return s.equals("");
+	}
+
+	public static boolean isNullStringArray(String[] s) {
+		if (s == null) {
+			return true;
+		}
+
+		return (s.length == 1) && (s[0].equals(""));
+	}
+
+	public static boolean isDigit(String str) {
+		for (int i = 0; i < str.length(); i++) {
+			if (!Character.isDigit(str.charAt(i)))
+				return false;
+		}
+		return true;
+	}
+
+	public static String genKeyName(String schema, String tabName, String colName) {
+		StringBuffer sb = new StringBuffer();
+		if (!schema.equals("")) {
+			sb.append(schema);
+		}
+		if (!tabName.equals("")) {
+			sb.append(".");
+			sb.append(tabName);
+		}
+		if (!colName.equals("")) {
+			sb.append(".");
+			sb.append(colName);
+		}
+
+		return sb.toString();
+	}
+
+	public static String toLowerCase(String str) {
+		if (str == null) {
+			return "";
+		}
+		return str.toLowerCase();
+	}
+
+	public static String genPrivKeyName(String schema, String tabName) {
+		StringBuffer sb = new StringBuffer();
+		if (!schema.equals(""))
+			sb.append(schema);
+		if (!tabName.equals("")) {
+			sb.append("." + tabName);
+		}
+		return sb.toString();
+	}
+
+	public static String toUpperCase2(String str) {
+		return str.toUpperCase();
+	}
+
+	public static String replaceAll(String original, String find, String replacement) {
+		StringBuffer buffer = new StringBuffer(original);
+
+		int idx = original.length();
+		int offset = find.length();
+
+		while ((idx = original.lastIndexOf(find, idx - 1)) > -1) {
+			buffer.replace(idx, idx + offset, replacement);
+		}
+
+		return buffer.toString();
+	}
+
+	public static String getComputerName() {
+		try {
+			String computerName = InetAddress.getLocalHost().getHostName();
+			return computerName;
+		} catch (UnknownHostException ex) {
+		}
+		return "";
+	}
+
+	private static String getNativeHostID(String command, StringBuffer error) {
+		try {
+			String line = null;
+			BufferedReader br = null;
+
+			Runtime runtime = Runtime.getRuntime();
+			Process process = runtime.exec(command);
+
+			br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			line = br.readLine();
+
+			if (line == null) {
+				error.append("hostid is null. ");
+			} else {
+				line = line.trim();
+			}
+			return line;
+		} catch (Exception ex) {
+			error.append(":: getNativeHostID :: " + ex.toString());
+		}
+		return null;
+	}
+
+	public static String hexEncode(byte[] input) {
+		if ((input == null) || (input.length == 0)) {
+			return "";
+		}
+
+		int inputLength = input.length;
+
+		StringBuffer output = new StringBuffer(inputLength * 2);
+
+		for (int i = 0; i < inputLength; i++) {
+			int next = input[i] & 0xFF;
+			if (next < 16) {
+				output.append("0");
+			}
+
+			output.append(Integer.toHexString(next));
+		}
+
+		return output.toString();
+	}
+
+	public byte[] intArrayToString(int[] intArray) {
+		String intString = "";
+
+		for (int i = 0; i < intArray.length; i++) {
+			intString = intString + Integer.toString(intArray[i]);
+		}
+
+		return intString.getBytes();
+	}
+}

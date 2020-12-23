@@ -1,0 +1,201 @@
+package com.gnew.bat.service;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.gnew.bat.conf.Conf;
+import com.gnew.bat.dao.KeyWordStatDao;
+import com.gnew.bat.util.Loger;
+
+public class KeywordStatisticsImpl implements KeywordStatistics {
+	static int   nCnt = 0;
+	public void createStatisticsDay(Map<String, Object> param){
+		
+		Map<String,Object> inParam = new HashMap<String, Object>();
+		KeyWordStatDao   keyWordStatDao = new KeyWordStatDao();
+		String tableNm = "";
+		
+		inParam.putAll(param);
+		
+		int delCnt = keyWordStatDao.deleteStatisticsDay(inParam);
+		
+		if (delCnt > 0 ) {
+			Loger.logPrint("[" + getTypeString(inParam.get("keywordType").toString(),inParam.get("statiType").toString()) + "] " 
+							+ "Delete old Batch : " + inParam.get("statDate") + " - RowCnt:" + delCnt);
+			// db_log Data Create
+			inParam.put("col1", "");
+			tableNm = getTableName(inParam.get("keywordType").toString(),inParam.get("statiType").toString());
+			inParam.put("tableNm", tableNm );
+			inParam.put("col2", "delete");
+			
+			if (keyWordStatDao.insertDbLog(inParam) > 0) {
+				//...
+			}
+		}
+
+		int insertCnt = keyWordStatDao.insertStatisticsDay(inParam);
+		Loger.logPrint("[" + getTypeString(inParam.get("keywordType").toString(),inParam.get("statiType").toString()) + "] " 
+				+ "Insert Row Count : (" + insertCnt +")");
+		//db_log Data Create
+		inParam.put("col2", "insert");
+		if (keyWordStatDao.insertDbLog(inParam) > 0) {
+			//...
+		}
+		
+		if (insertCnt <= 0 ) {
+			// 수행한 count 가 없을 경우 사용자 환기 처리 필요할듯...
+		} 
+		keyWordStatDao.closeSession();
+	}
+	
+	//키워드 전체 통계 구분 전체 or 키워드 타입 하나에 전체 통계 대상 수행
+	public void createStatisticsDayAll(Map<String, Object> inParam){
+		Map<String,Object> param = new HashMap<String, Object>();
+		
+		param.putAll(inParam);
+		
+		if (param.get("keywordType").equals(Conf.ALL_KEYWORD)) {
+			param.put("keywordType", Conf.POP_KEYWORD);		// 인기 키워드
+			for (int i =0; i < Conf.KEYWORD_TYPE_MAX; i++ ){
+				// 통계 타입별로 수행 
+				for (int j=0; j < Conf.STATIS_TYPE_MAX; j++) {
+					int nType = j +1;		
+					// statistic type (업체별로 1:회선, 2:성별-연령대, 3:지역, 4:업종)
+					param.put("statiType", Integer.toString(nType));		
+					this.createStatisticsDay(param);
+				}
+				// 키워드 타입 	변경 
+//				param.put("keywordType", Conf.USER_KEYWORD );  // 이부분이 확장되게 되면 상수가 아니라 변수로 수정필요
+				
+				// 이부분이 확장되게 되면 상수가 아니라 변수로 수정필요 (
+				String keywordType = Integer.toString(i+2);
+				param.put("keywordType", keywordType );
+			}
+		} else{
+			// keywordType는 pama으로 들어온 type으로 전체 통계타입을 수행
+			for (int j=0; j < Conf.STATIS_TYPE_MAX; j++) {
+				int nType = j +1;		
+				// statistic type (업체별로 1:회선, 2:성별-연령대, 3:지역, 4:업종)
+				param.put("statiType", Integer.toString(nType));		
+				this.createStatisticsDay(param);
+			}
+		}
+	}
+	
+	// 키워드 전체 통계 구분은 하나
+	public void createStatisticsDayAllStatPartial(Map<String, Object> inParam){
+		Map<String,Object> param = new HashMap<String, Object>();
+		
+		param.putAll(inParam);
+		param.put("keywordType", Conf.POP_KEYWORD);		// 인기 키워드
+		
+		for (int i =0; i < Conf.KEYWORD_TYPE_MAX; i++ ){	
+			this.createStatisticsDay(param);
+			// 키워드 타입 	변경 
+//			param.put("keywordType", Conf.USER_KEYWORD);
+			String keywordType = Integer.toString(i+2);
+			param.put("keywordType", keywordType );
+		}
+	}
+	
+	public String getTypeString (String kType, String sType) {
+		String rstTypeStr = "";
+		
+		if (kType.equals(Conf.POP_KEYWORD)) {
+			rstTypeStr = "POP-";
+		}else if(kType.equals(Conf.USER_KEYWORD)) {
+			rstTypeStr = "USER-";
+		}else{
+			rstTypeStr = "CALL-";
+		}
+		
+		switch (sType) {
+			case Conf.SVCNB:
+				rstTypeStr = rstTypeStr + "SVCNB";
+				break;
+			case Conf.GEN_AGE:
+				rstTypeStr = rstTypeStr + "GENAGE";
+				break;
+			case Conf.AREA:
+				rstTypeStr = rstTypeStr + "AREA";
+				break;
+			case Conf.BIZ_NM:
+				rstTypeStr = rstTypeStr + "BIZ_NM";
+				break;
+			default:
+				rstTypeStr = rstTypeStr + "SVCNB";
+				break;
+		}
+		return rstTypeStr;
+	}
+	
+	public String getTableName (String kType, String sType) {
+		String rstTypeStr = "";
+		
+		if (kType.equals(Conf.POP_KEYWORD)) {
+			rstTypeStr = "public.tb_ca_keyword_";
+		}else if (kType.equals(Conf.USER_KEYWORD)) {
+			rstTypeStr = "public.tb_ca_user_stat_keyword_";
+		}else{
+			rstTypeStr = "public.tb_ca_call_count_keyword_";
+		}
+		
+		switch (sType) {
+			case Conf.SVCNB:
+				rstTypeStr = rstTypeStr + "svcnb_day";
+				break;
+			case Conf.GEN_AGE:
+				rstTypeStr = rstTypeStr + "genage_day";
+				break;
+			case Conf.AREA:
+				rstTypeStr = rstTypeStr + "area_day";
+				break;
+			case Conf.BIZ_NM:
+				rstTypeStr = rstTypeStr + "biz_day";
+				break;
+			default:
+				rstTypeStr = rstTypeStr + "svcnb_day";
+				break;
+		}
+		return rstTypeStr;
+	}
+	
+	//start deleteFolder
+	public boolean deleteFolder(String path) {
+		boolean  				rVal = false;
+		
+		try{
+			File folder = new File(path);		
+			
+			while(folder.exists()) {
+				File[]  fFileList = folder.listFiles();
+				nCnt = 1; 
+				for(File fFile : fFileList) {
+					if (fFile.isFile()){	//file
+						fFile.delete();
+					}else if(fFile.isDirectory()){		//directory.
+						Loger.debug("[Del-DirName] - " + fFile.getName());
+						//not file Type ..(sub Diretory...):
+						String subDirPath = path + File.separator + fFile.getName();
+						if (deleteFolder(subDirPath) == false) {
+							Loger.debug("[sub Diretory Delete failed]: "  + subDirPath);
+						}  
+					}
+					Loger.debug("[file delete] NO." + String.format("%,d", nCnt)+ ":" + fFile.getName());
+					nCnt = nCnt +1;
+				} //end for
+				
+				if (fFileList.length == 0  && folder.isDirectory()) {
+					folder.delete();
+					Loger.debug("[folder delete] : " + path + File.separator +  folder.getName());
+				}
+			}
+			rVal = true;
+		}catch(Exception e){
+			Loger.error("--- deleteFolder("+ path + ")", e);
+		}
+
+		return rVal;
+	} //end makeFile 
+}

@@ -1,0 +1,157 @@
+package com.gnew.bat.conf;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
+
+import com.gnew.bat.util.Loger;
+
+// singlton(static) config class
+public class Conf {
+	
+	//key-values define
+//	public static String driver= "";
+//	public static String url= "";
+//	public static String dbId= "";
+//	public static String dbPwd= "";
+//	public static String dbPwdEnc= "";
+	
+//	public static String myBaitsXmlFile= "";
+	public static String logLevel= "";
+	public static String logFile= "";
+	public static String encFilePath= "";
+	public static String encFileDelChk= "";
+	public static String delPeriodDay= "";
+	public static String regUser= "";
+	
+	public static String binPath = "";			//실행 bin path
+	public static long	 launcherSleepSec=0;	//lanucher sleep 초   
+	public static String launcherExitChk="";	//lanucher를 종료 시킬 옵션 값..
+	
+	public static final String  MANUAL_MODE  = "1";
+	public static final String  SLEEP_MODE  = "1";
+	
+	public static final String  ALL_KEYWORD  = "0";
+	public static final String  POP_KEYWORD  = "1";
+	public static final String  USER_KEYWORD = "2";
+	public static final String  CALL_CNT	 = "3";
+	
+	public static final int KEYWORD_TYPE_MAX = 3;		// 1:인기, 2:불만만족 , 3:콜건수 
+	public static final int STATIS_TYPE_MAX = 4;		// statistic type (업체별로 1:회선, 2:성별-연령대, 3:지역, 4:업종)
+	
+	public static final String  STAT_ALL= "0";
+	public static final String  SVCNB   = "1";
+	public static final String  GEN_AGE = "2";
+	public static final String  AREA    = "3";
+	public static final String  BIZ_NM  = "4";
+	
+	public static final String  DELETE_MODE  = "1";   // 0: NONE, 1:JAVA FIEL DELETE, 2:SHELL-rm -rf delete
+	
+	public static Properties  prop = null;
+
+//	private static Conf conf = new Conf();
+	
+	//init 
+	public static void init(String sFile) throws Exception {
+		File profile = null;
+		FileInputStream  fis = null;
+
+		profile = new File(sFile);
+		prop = new Properties();
+		
+		try{
+			//파일없는경우 빈파일 생성
+			if (!profile.exists()) profile.createNewFile();
+			fis = new FileInputStream(profile);
+			
+			prop.load(fis);
+			
+			getProperties();
+			printProperty();
+		}catch(Exception e){
+			e.printStackTrace();
+			throw new Exception();
+		}
+//		return conf;
+	}
+	
+	//get Property
+	private static void getProperties() {
+//		driver = prop.getProperty("driver").toString().trim(); 
+//		dbId = prop.getProperty("dbId").toString().trim(); 
+//		url = prop.getProperty("url").toString().trim();
+		logLevel = prop.getProperty("logLevel","1").toString().trim();
+		logFile = prop.getProperty("logFile", "../logs/dbBat.log").toString().trim();
+		logFile = prop.getProperty("logFile", "../logs/dbBat.log").toString().trim();
+//		myBaitsXmlFile = prop.getProperty("myBaitsXmlFile", "/root/Gnew/dbBatch/conf/mybatisConfig.xml").toString().trim();
+		encFilePath = prop.getProperty("encFilePath", "../file/enc").toString().trim();	
+		encFileDelChk = prop.getProperty("encFileDelChk", "0").toString().trim();
+		delPeriodDay = prop.getProperty("delPeriodDay", "30").toString().trim();
+//		TextEnDecryptor textEnDecryptor = new TextEnDecryptor();
+//		
+//		dbPwdEnc = prop.getProperty("dbPwd").toString().trim();
+//		String decData = textEnDecryptor.decryptBase64ToText(dbPwdEnc);
+//		dbPwd = decData;
+		regUser = prop.getProperty("regUser", "BAT").toString().trim();
+		binPath = prop.getProperty("binPath", "./bin").toString().trim();
+		launcherSleepSec = Long.parseLong(prop.getProperty("sleepSec", "86400").toString().trim());
+	}
+	
+	//set property
+	
+	//store property
+	
+	
+	//string token print 
+	public static void printProperty() {
+		Loger.info("<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>");
+		Loger.info("<<<<<<<<<< KEYWORD BATCH CONFIG VALUE >>>>>>>>>>>");
+		Loger.info("<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>");
+//		Loger.info("[dbId]\t : " + dbId);
+//		Loger.info("[dbPwd]\t : " + dbPwdEnc);
+//		Loger.info("[url]\t : " + url);
+		Loger.info("[logLevel]\t : " + logLevel);		
+		Loger.info("[logFile] : " + logFile);
+		Loger.info("[encFilePath] : " + encFilePath);
+		Loger.info("[encFileDelChk] : " + encFileDelChk);		
+		Loger.info("[delPeriodDay] : " + delPeriodDay);
+//		Loger.info("[myBaitsXmlFile] : " + myBaitsXmlFile);
+		Loger.info("[regUser] : " + regUser);
+		Loger.info("[sleepSec] : " + launcherSleepSec);
+		Loger.info("[binPath]\t : " + binPath);
+		Loger.info("<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>");
+	}
+	
+	public static boolean confValidCheck() {
+		boolean rVal = true;
+		
+//		if (driver == null || url == null || dbId == null || dbPwd == null) {
+//			Loger.error("confValidCheck - db Info Err");
+//			rVal = false;
+//		}
+		
+		//.. 다른것도 여기에 추가...
+		return rVal;
+	}
+	
+	//init 
+	public static void getExitChkVal(String sFile) throws Exception {
+		File profile = null;
+		FileInputStream  fis = null;
+
+		profile = new File(sFile);
+		prop = new Properties();
+		
+		try{
+			//파일없는경우 빈파일 생성
+			if (!profile.exists()) profile.createNewFile();
+			fis = new FileInputStream(profile);
+			
+			prop.load(fis);
+			launcherExitChk = prop.getProperty("launcherExitChk", "0").toString().trim();
+		}catch(Exception e){
+			e.printStackTrace();
+			throw new Exception();
+		}
+	}
+}
