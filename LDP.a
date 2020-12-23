@@ -1,0 +1,157 @@
+package com.gnew.bat.dbms;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import com.gnew.bat.conf.Conf;
+import com.gnew.bat.log.Loger;
+
+public class LauncherDbProc {
+	public static Connection conn = null;
+	public static PreparedStatement	pstmt = null;
+	//CallableStatement	caDBO = null;	
+
+	// 접속 conn
+	public boolean dbConn( Map<String, Object> dbInfo) {
+		boolean rVal = false;
+		
+		try{
+			String jdbcUrl = (String)dbInfo.get("jdbcUrl");
+		    Properties props = new Properties();
+			props.setProperty("user", (String)dbInfo.get("dbId"));
+			props.setProperty("password",(String)dbInfo.get("dbPwd"));
+//			props.setProperty("ssl","true");
+			conn =DriverManager.getConnection(jdbcUrl, props);
+		    conn.setAutoCommit(true);
+		    Loger.info(">>>> Connected DB!");
+		    rVal = true;
+		    
+		}catch (SQLException e){
+			Loger.error("[DB_Failed]Connection Failed!", e);
+		}
+		return rVal; 
+	}
+	
+	
+	// 모듈 모니터리 
+	public Map<String, Object>  detectModuleState() throws Exception{
+		ResultSet 	rs = null;
+		Map<String, Object> mRst = new HashMap<String, Object>();
+		try {
+			 String sql = "SELECT (CASE WHEN DATE_PART('MIN', NOW() - live_time ) >= ? THEN 'RUN' "
+								+ "   ELSE 'STANDBY' END " 
+								+ "  ) AS run_mode "
+								+ " FROM  tb_ca_batch_lanucher_dec "
+								+ " WHERE 1=1 "
+								+ " AND module_cd = ? "		// CONF에서 1호기CHK를 주고 TRUE면 2호기를 조회 
+								+ " AND module_mode = ? "
+								;
+			
+				pstmt = conn.prepareStatement(sql);
+				
+				pstmt.setInt(1, (int) Conf.detectChkMin);		//detect 대상 module_cd
+				pstmt.setString(2, (String) Conf.detectModuleCd);		//detect 대상 module_cd 	 
+				pstmt.setString(3, "A");							// active 중인 모듈이 죽었는지 체크 
+								
+				rs = pstmt.executeQuery();
+				
+				if(rs.next()){
+					// resutSet 처리 
+					mRst.put("runMode", rs.getString("run_mode"));
+				}else{
+					// ResultSet값이 null인 경우 처리하고 싶은 코드를 작성하면 된다.
+					mRst.put("runMode", "ACTIVATED");
+				}
+				Loger.info("[detectModueState]: " + Conf.myModuleCd + " module => " + mRst.get("runMode") + " Mode");
+		}catch(SQLException e){
+			Loger.error("detectModueState - Select Query Error!", e);
+		}finally{
+			if(rs != null) try{rs.close();}catch(SQLException e){e.printStackTrace();}
+		}
+
+		return mRst; 
+	}
+	
+	
+	public boolean updateToDetectModuleForStandby() throws Exception{ 
+		try{
+			// 1. UPDATAE tb_ca_batch_lanucher_dec active status 
+			String sql = "UPDATE tb_ca_batch_lanucher_dec "
+					  + " SET module_mode = 'S' "			 
+					  + " WHERE 1=1 "
+					  + " AND module_cd = ? "		
+					  ;
+			pstmt = conn.prepareStatement(sql);
+		  	pstmt.setString(1, (String) Conf.detectModuleCd);			//감지하고 있던 Active상태인 모듈을  standby 상태로..
+	        pstmt.executeUpdate();
+	        
+	        Loger.logPrint("Mode Change Success] " + Conf.detectModuleCd + " module => STANDBY Mode");
+			return true;
+		}catch(SQLException e){
+	    	Loger.error("[updateToDetectModuleForStandby] Fail-Active Mode => StandBy Mode (module_cd : " + Conf.detectModuleCd + ")", e);
+	    	return false;
+		}
+	}
+	
+//	public boolean updateCronDel() throws Exception{ 
+//		try{
+//			// 1. UPDATAE tb_ca_batch_lanucher_dec active status 
+//			String sql = "UPDATE tb_ca_batch_lanucher_dec "
+//					  + " SET cron_del = '1' "			 
+//					  + " WHERE 1=1 "
+//					  + " AND module_cd = ? "		
+//					  ;
+//			pstmt = conn.prepareStatement(sql);
+//		  	pstmt.setString(1, (String) Conf.myModuleCd);			//자기자신의 cron 스켸줄을 삭제하고 cron_del을 1:true처리
+//	        pstmt.executeUpdate();
+//	        
+//	        Loger.info("[updateCronDel] Ok-cron_del true update (module_cd : " + Conf.myModuleCd + ")");
+//			return true;
+//		}catch(SQLException e){
+//	    	Loger.error("[updateCronDel] Fail-cron_del true update (module_cd : " + Conf.myModuleCd + ")", e);
+//	    	return false;
+//		}
+//	}
+	
+	public boolean updateToMyModuleForActive() throws Exception{ 
+		try{
+			// 1. UPDATAE tb_ca_batch_lanucher_dec Live TimeStamp 
+			String sql = "UPDATE tb_ca_batch_lanucher_dec "
+					  + " SET live_time  = now() "
+					  + " ,  module_mode = 'A'"
+					  + " WHERE 1=1 "
+					  + " AND module_cd = ? "		
+					  ;
+			pstmt = conn.prepareStatement(sql);
+		  	pstmt.setString(1, (String) Conf.myModuleCd);			//자기자신의 모듈 active, live_time Now
+	        pstmt.executeUpdate();
+	        
+	        Loger.info("[Live Stamp Success] " + Conf.myModuleCd + " module LIVE CHECK!!!");
+			return true;
+		}catch(SQLException e){
+	    	Loger.error("[updateToMyModuleForActive] Fail-AcitivMode_Me (module_cd : " + Conf.myModuleCd + ")", e);
+	    	return false;
+		}
+	}
+	
+	// 접속 종료 
+	public void dbConnClose( Connection con ){
+		try {
+			conn.close();
+		
+		}catch(SQLException e){
+			e.printStackTrace();
+			System.out.println("DB Conn Close failed");
+			Loger.error("DB Conn Close failed!!!!", e);
+		}
+		
+	}
+}
